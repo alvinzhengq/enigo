@@ -53,26 +53,21 @@ fn mouse_event(flags: MOUSE_EVENT_FLAGS, data: i32, dx: i32, dy: i32) {
 }
 
 fn keybd_event(flags: KEYBD_EVENT_FLAGS, vk: VIRTUAL_KEY, scan: ScanCode) {
-    let input = INPUT {
-        r#type: INPUT_KEYBOARD,
-        Anonymous: INPUT_0 {
-            ki: KEYBDINPUT {
+    let mut input = INPUT {
+        type_: INPUT_KEYBOARD,
+        u: unsafe {
+            let mut input_u: INPUT_u = std::mem::zeroed();
+            *input_u.ki_mut() = KEYBDINPUT {
                 wVk: vk,
                 wScan: scan,
                 dwFlags: flags,
                 time: 0,
                 dwExtraInfo: 0,
-            },
+            };
+            input_u
         },
     };
-    unsafe {
-        SendInput(
-            &[input as INPUT],
-            size_of::<INPUT>()
-                .try_into()
-                .expect("Could not convert the size of INPUT to i32"),
-        )
-    };
+    unsafe { SendInput(1, &mut input as LPINPUT, size_of::<INPUT>() as c_int) };
 }
 
 impl MouseControllable for Enigo {
